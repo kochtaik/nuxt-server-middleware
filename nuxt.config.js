@@ -26,6 +26,7 @@ export default {
   buildModules: [
     // https://go.nuxtjs.dev/typescript
     '@nuxt/typescript-build',
+    '@nuxtjs/dotenv',
   ],
 
   // Modules: https://go.nuxtjs.dev/config-modules
@@ -37,15 +38,9 @@ export default {
       path: '/api',
       handler: (req, res, next) => {
         res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8080')
-        /* refactor */
-        res.setHeader('Access-Control-Allow-Headers', 'Origin')
-        res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With')
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
-        res.setHeader('Access-Control-Allow-Headers', 'Accept')
 
-        const url = require('url')
-        req.query = url.parse(req.url, true).query
-        req.params = { ...req.query, ...req.body }
+        const fullURL = new URL(`${req.headers.origin}${req.originalUrl}`)
+        req.params = fullURL.searchParams
         next()
       },
     },

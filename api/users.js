@@ -1,13 +1,22 @@
-const axios = require('axios')
+var admin = require('firebase-admin')
+var serviceAccount = require(process.env.NUXT_APP_FIREBASE_SERVICE_ACCOUNT)
 
-function fetchUsers() {
-  return axios
-    .get('https://jsonplaceholder.typicode.com/todos/1')
-    .then((res) => res.data)
+let app
+if (!admin.apps.length) {
+  app = admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: process.env.NUXT_APP_DATABASE_URL,
+  })
+}
+const database = admin.database(app)
+
+async function getUserSubscriptionPlan(requestParams) {
+  const userId = requestParams.get('userId')
+  return await database
+    .ref(userId)
+    .child('profile/plan')
+    .once('value')
+    .then((snapshot) => snapshot.val())
 }
 
-async function logUsers() {
-  return await fetchUsers()
-}
-
-export { logUsers }
+export { getUserSubscriptionPlan }
