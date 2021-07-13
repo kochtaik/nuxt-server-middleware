@@ -1,3 +1,7 @@
+// const firebase = require('./firebase-service.js')
+const verifyToken = require('./server-middleware/verifyToken.js')
+const setCORS = require('./server-middleware/setCORSHeaders.js')
+
 export default {
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
@@ -36,8 +40,11 @@ export default {
     { path: '/api', handler: require('body-parser').json() },
     {
       path: '/api',
-      handler: (req, res, next) => {
-        res.setHeader('Access-Control-Allow-Origin', 'http://localhost:8080')
+      handler: async (req, res, next) => {
+        setCORS(res)
+
+        const rawToken = req.headers.authorization
+        verifyToken(rawToken, res)
 
         const fullURL = new URL(`${req.headers.origin}${req.originalUrl}`)
         req.params = fullURL.searchParams
