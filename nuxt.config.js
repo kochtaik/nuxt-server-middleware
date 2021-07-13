@@ -1,3 +1,6 @@
+const paypal = require('paypal-rest-sdk')
+const axios = require('axios')
+
 export default {
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
