@@ -1,7 +1,6 @@
-const doesPlanExist = require('../utils/checkIfPlanExists')
-
-const firebase = require('../firebase-service')
+const firebase = require('../firebase-service.js')
 const database = firebase.admin.database(firebase.app)
+const doesPlanExist = require('../utils/checkIfPlanExists')
 
 async function getUserProfile(requestParams) {
   const userId = requestParams.get('userId')

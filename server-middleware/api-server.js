@@ -4,9 +4,7 @@ export default async (req, res, next) => {
     .split('/')
   const method = urlSegments.pop()
   const controllerName = urlSegments.slice(1).join('/')
-  const api = require('../api/' + controllerName)
-  /* fully rewrite to async/await syntax */
-  await api[method](req.params).then((output) => {
-    res.end(JSON.stringify(output))
-  })
+  const api = require(`../api/${controllerName}`)
+  const apiExecutionResult = await api[method](req.params)
+  res.end(JSON.stringify(apiExecutionResult))
 }
