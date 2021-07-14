@@ -1,7 +1,5 @@
-// const firebase = require('./firebase-service.js')
 const verifyToken = require('./server-middleware/verifyToken.js')
 const setCORS = require('./server-middleware/setCORSHeaders.js')
-
 export default {
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
@@ -37,7 +35,14 @@ export default {
   modules: [],
 
   serverMiddleware: [
-    { path: '/api', handler: require('body-parser').json() },
+    {
+      path: '/api',
+      handler: require('body-parser').urlencoded({ extended: true }),
+    },
+    {
+      path: '/api/plans/setPlan',
+      handler: require('./server-middleware/handlers/setPlan'),
+    },
     {
       path: '/api',
       handler: async (req, res, next) => {
