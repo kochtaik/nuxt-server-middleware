@@ -1,25 +1,11 @@
-var admin = require('firebase-admin')
-var serviceAccount = require(process.env.NUXT_APP_FIREBASE_SERVICE_ACCOUNT)
+const doesPlanExist = require('../utils/checkIfPlanExists')
 
-let app
-if (!admin.apps.length) {
-  app = admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: process.env.NUXT_APP_DATABASE_URL,
-  })
-}
-const database = admin.database(app)
-
-/* simulate TypeScript enum */
-let availablePlans
-;(function (availablePlans) {
-  availablePlans['premium'] = 'premium'
-  availablePlans['default'] = 'default'
-})(availablePlans || (availablePlans = {}))
+const firebase = require('../firebase-service')
+const database = firebase.admin.database(firebase.app)
 
 async function getUserProfile(requestParams) {
   const userId = requestParams.get('userId')
-  if (!userId) throw new Error('User ID is not defined')
+  if (!userId) throw new Error('User ID must be specified')
 
   return await database
     .ref(userId)
@@ -36,26 +22,31 @@ async function getUserSubscriptionPlan(requestParams) {
 
 async function setUserSubscriptionPlan(requestParams) {
   const requestedPlan = requestParams.get('plan')
-  if (!requestedPlan in availablePlans) throw new Error('Invalid plan')
+  if (!doesPlanExist(requestedPlan)) throw new Error('Invalid plan')
 
-  const userProfile = await getUserProfile(requestParams)
+  /* get details of the requested plan from Firebase */
+  const requestedPlanDetails = await getPlanDetails(requestParams)
+  console.log('requested plan details:', userProfile.plan)
+
+  /* change 'plan' field in the user profile and return plan details */
   const userId = requestParams.get('userId')
-
-  userProfile.plan = {
-    type: requestedPlan,
-    price: await getPlanPrice(requestParams),
-  }
-
-  await database.ref(userId).child('profile').set(userProfile)
-  return userProfile.plan
+  await database
+    .ref(userId)
+    .child('profile')
+    .child('plan')
+    .set(requestedPlanDetails)
+  return requestedPlanDetails
 }
 
-async function getPlanPrice(requestParams) {
-  const plan = requestParams.get('plan')
-  if (!plan in availablePlans) throw new Error('Invalid plan')
+async function getPlanDetails(requestParams) {
+  const requestedPlan = requestParams.get('plan')
+  if (!doesPlanExist(requestedPlan)) throw new Error('Invalid plan')
 
-  const snapshot = await database.ref('prices').child(plan).once('value')
-  return Number(snapshot.val())
+  const snapshot = await database
+    .ref('plans')
+    .child(requestedPlan)
+    .once('value')
+  return snapshot.val()
 }
 
-export { getUserSubscriptionPlan, setUserSubscriptionPlan, getPlanPrice }
+export { getUserSubscriptionPlan, setUserSubscriptionPlan, getPlanDetails }

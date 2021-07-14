@@ -1,6 +1,3 @@
-const paypal = require('paypal-rest-sdk')
-const axios = require('axios')
-
 export default {
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
@@ -36,7 +33,14 @@ export default {
   modules: [],
 
   serverMiddleware: [
-    { path: '/api', handler: require('body-parser').json() },
+    {
+      path: '/api',
+      handler: require('body-parser').urlencoded({ extended: true }),
+    },
+    {
+      path: '/api/plans/setPlan',
+      handler: require('./server-middleware/handlers/setPlan'),
+    },
     {
       path: '/api',
       handler: (req, res, next) => {
