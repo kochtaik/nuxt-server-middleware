@@ -1,5 +1,6 @@
-const verifyToken = require('./server-middleware/verifyToken.js')
-const setCORS = require('./server-middleware/setCORSHeaders.js')
+const handlers = require('./server-middleware/handlers')
+const url = require('url')
+
 export default {
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
@@ -40,20 +41,25 @@ export default {
       handler: require('body-parser').urlencoded({ extended: true }),
     },
     {
-      path: '/api/plans/setPlan',
-      handler: require('./server-middleware/handlers/setPlan'),
-    },
-    {
       path: '/api',
       handler: async (req, res, next) => {
-        setCORS(res)
-
-        const rawToken = req.headers.authorization
-        verifyToken(rawToken, res)
-
-        const fullURL = new URL(`${req.headers.origin}${req.originalUrl}`)
-        req.params = fullURL.searchParams
+        handlers.setCORSHeaders(res)
+        await handlers.verifyToken(req, res)
+        handlers.setSearchParams(req)
         next()
+      },
+    },
+    {
+      path: '/api/plans/subscribeUserToPremium',
+      handler: async (req, res) =>
+        await handlers.subscribeUserToPremium(req, res),
+    },
+    {
+      path: '/api/plans/getPlanDetails',
+      handler: async (req, res, next) => {
+        const [, requestedPlan] = req.originalUrl.split('plan=')
+
+        res.end(await handlers.getPlanDetails(requestedPlan))
       },
     },
     {
