@@ -1,5 +1,4 @@
 const handlers = require('./server-middleware/handlers')
-const url = require('url')
 
 export default {
   // Global page headers: https://go.nuxtjs.dev/config-head
@@ -38,7 +37,7 @@ export default {
   serverMiddleware: [
     {
       path: '/api',
-      handler: require('body-parser').urlencoded({ extended: true }),
+      handler: require('body-parser').json(),
     },
     {
       path: '/api',
