@@ -25,23 +25,32 @@ module.exports = {
   },
 
   subscribeUserToPremium: async (req, res) => {
-    const { userId, planType } = JSON.parse([Object.keys(req.body)])
-    if (!userId || !planType) {
-      throw new Error('Both userId and planType must be specified')
-    }
-    /* get details of the requested plan from Firebase */
-    const requestedPlanDetailsRes = await module.exports.getPlanDetails(
-      planType
-    )
-    const requestedPlanDetails = await requestedPlanDetailsRes.json()
+    try {
+      if (req.method === 'OPTIONS') {
+        return res.end()
+      }
+      const { userId, planType } = req.body
+      if (!userId || !planType) {
+        throw new Error('Both userId and planType must be specified')
+      }
+      /* get details of the requested plan from Firebase */
+      const requestedPlanDetailsRes = await module.exports.getPlanDetails(
+        planType
+      )
+      const requestedPlanDetails = JSON.parse(requestedPlanDetailsRes)
 
-    /* change 'plan' field in the user profile and return plan details */
-    await database
-      .ref(userId)
-      .child('profile')
-      .child('plan')
-      .set(requestedPlanDetails)
-    res.end()
+      /* change 'plan' field in the user profile and return plan details */
+      await database
+        .ref(userId)
+        .child('profile')
+        .child('plan')
+        .set(requestedPlanDetails)
+      res.end()
+    } catch (error) {
+      console.error(error)
+      res.statusCode = 500
+      res.end()
+    }
   },
 
   setCORSHeaders: (res) => {
@@ -49,7 +58,11 @@ module.exports = {
       'Access-Control-Allow-Origin',
       process.env.NUXT_APP_CLIENT_URL
     )
-    res.setHeader('Access-Control-Allow-Headers', 'authorization')
+    res.setHeader(
+      'Access-Control-Allow-Headers',
+      'authorization, Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers'
+    )
+    res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,OPTIONS,POST,PUT')
   },
 
   getPlanDetails: async (requestedPlanType) => {
